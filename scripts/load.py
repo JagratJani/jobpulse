@@ -22,15 +22,15 @@ from psycopg2.extras import execute_values
 from dotenv import load_dotenv
 
 # Load .env file from project root
-load_dotenv(Path(__file__).parent.parent / ".env")
-load_dotenv()
+load_dotenv(Path(__file__).parent.parent / ".env", override=True)
+load_dotenv(override=True)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 DB_CONFIG = {
     "host": os.environ.get("JOBPULSE_DB_HOST", "localhost"),
-    "port": os.environ.get("JOBPULSE_DB_PORT", "5432"),
+    "port": os.environ.get("JOBPULSE_DB_PORT", "5433"),
     "dbname": os.environ.get("JOBPULSE_DB_NAME", "jobpulse"),
     "user": os.environ.get("JOBPULSE_DB_USER", "postgres"),
     "password": os.environ.get("JOBPULSE_DB_PASSWORD", "postgres"),

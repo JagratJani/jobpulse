@@ -20,15 +20,15 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent))
 from pipeline import run_pipeline
 
-load_dotenv(Path(__file__).parent.parent / ".env")
-load_dotenv()
+load_dotenv(Path(__file__).parent.parent / ".env", override=True)
+load_dotenv(override=True)
 
 app = FastAPI(title="JobPulse Dashboard", version="1.0.0")
 
 def get_db():
     return psycopg2.connect(
         host=os.environ.get("JOBPULSE_DB_HOST", "localhost"),
-        port=os.environ.get("JOBPULSE_DB_PORT", "5432"),
+        port=os.environ.get("JOBPULSE_DB_PORT", "5433"),
         dbname=os.environ.get("JOBPULSE_DB_NAME", "jobpulse"),
         user=os.environ.get("JOBPULSE_DB_USER", "postgres"),
         password=os.environ.get("JOBPULSE_DB_PASSWORD", "postgres"),

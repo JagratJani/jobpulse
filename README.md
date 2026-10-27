@@ -137,29 +137,31 @@ cd jobpulse
 ```
 
 ### 2. Configure Environment Variables
-Copy `.env.example` to `.env` and fill in your PostgreSQL credentials:
+Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
-Example `.env`:
+Example `.env` (configured for Docker by default):
 ```env
 JOBPULSE_DB_HOST=localhost
-JOBPULSE_DB_PORT=5432
+JOBPULSE_DB_PORT=5433
 JOBPULSE_DB_NAME=jobpulse
 JOBPULSE_DB_USER=postgres
-JOBPULSE_DB_PASSWORD=your_password
+JOBPULSE_DB_PASSWORD=postgres
 ```
+*(Note: Port `5433` is used by Docker Compose to prevent conflicts with any native PostgreSQL running on `5432`. If using local Postgres, change port to `5432`).*
 
-### 3. Start PostgreSQL
-You can run Postgres via Docker or use your local PostgreSQL instance:
+### 3. Start PostgreSQL & Apache Airflow (Via Docker)
+Start the entire infrastructure (PostgreSQL database + Apache Airflow) with one command:
 
-**Via Docker:**
 ```bash
 docker compose up -d
 ```
+This automatically:
+- Starts PostgreSQL on port `5433` and executes `sql/schema.sql` to initialize all Star Schema tables.
+- Starts Apache Airflow on port `8080` with the `jobpulse_daily_etl` DAG active.
 
-**Via Local PostgreSQL:**
-Make sure PostgreSQL is running, create the `jobpulse` database, and apply the schema:
+*(Alternative: If running local PostgreSQL without Docker)*:
 ```bash
 psql -U postgres -d jobpulse -f sql/schema.sql
 ```
@@ -247,11 +249,18 @@ LIMIT 10;
 ---
 
 ## ⏱️ Airflow Orchestration
+ 
+The project includes a ready-to-run Apache Airflow orchestration setup in `docker-compose.yml` (`dags/jobpulse_dag.py`):
 
-For automated daily scheduling:
-1. Place `dags/jobpulse_dag.py` and the `scripts/` directory into your Airflow DAGs directory.
-2. Set the environment variables in your Airflow worker environment.
-3. Enable the `jobpulse_daily_etl` DAG from the Airflow web interface.
+1. **Access Airflow Web UI:** Navigate to **[http://localhost:8080](http://localhost:8080)**
+2. **Login Credentials:**
+   - **Username:** `admin`
+   - **Password:** `admin`
+3. **Pipeline Features:**
+   - Visual task DAG: `extract` ➔ `transform` ➔ `load`
+   - Automated daily scheduling (`@daily`) with catchup disabled
+   - Automatic retry handling (2 retries with 5-minute backoff)
+   - Real-time logging of ingested row counts, duplicates, and data quality metrics
 
 ---
 

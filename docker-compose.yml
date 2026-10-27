@@ -10,10 +10,34 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - jobpulse_pgdata:/var/lib/postgresql/data
       - ./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  airflow:
+    image: apache/airflow:2.8.4-python3.10
+    container_name: jobpulse_airflow
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
+      - _PIP_ADDITIONAL_REQUIREMENTS=requests pandas psycopg2-binary python-dotenv
+      # Points to the Docker Postgres container internally:
+      - JOBPULSE_DB_HOST=postgres
+      - JOBPULSE_DB_PORT=5432
+      - JOBPULSE_DB_NAME=jobpulse
+      - JOBPULSE_DB_USER=postgres
+      - JOBPULSE_DB_PASSWORD=postgres
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+      - ./data:/opt/airflow/data
+    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true; airflow standalone"
 
 volumes:
   jobpulse_pgdata:
